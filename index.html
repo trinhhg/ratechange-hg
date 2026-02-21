@@ -7,11 +7,11 @@
     <style>
         /* ================= BIẾN CSS THEME XANH ĐÔ LA ================= */
         :root {
-            --bg-body: #f0fdf4; /* Xanh nhạt nền */
+            --bg-body: #f0fdf4; 
             --bg-card: #ffffff;
             --text-main: #1f2937;
             --text-muted: #6b7280;
-            --accent-color: #16a34a; /* Xanh lá tiền đô */
+            --accent-color: #16a34a; 
             --accent-hover: #15803d;
             --border-color: #d1d5db;
             --input-bg: #f9fafb;
@@ -27,7 +27,7 @@
             --text-muted: #9ca3af;
             --border-color: #374151;
             --input-bg: #111827;
-            --result-bg: #064e3b; /* Xanh rêu đậm */
+            --result-bg: #064e3b; 
             --accent-color: #22c55e;
             --accent-hover: #16a34a;
             --shadow: 0 8px 20px rgba(0,0,0,0.4);
@@ -47,8 +47,8 @@
 
         /* ================= INPUT FIELDS ================= */
         .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 13px; margin-bottom: 6px; font-weight: 700; color: var(--text-muted); }
-        .input-group { position: relative; display: flex; align-items: center; }
+        .form-group label { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 6px; font-weight: 700; color: var(--text-muted); }
+        .unit-badge { color: #fff; background-color: var(--accent-color); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         
         input[type="number"], select { width: 100%; padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--input-bg); color: var(--text-main); font-size: 16px; outline: none; transition: 0.2s; }
         input[type="number"]:focus, select:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1); }
@@ -59,7 +59,7 @@
         /* Khu vực nhập phụ trợ */
         .helper-box { padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 16px; background: var(--input-bg); }
         .helper-box label { color: var(--accent-color); }
-        .helper-text { font-size: 11px; color: var(--text-muted); margin-top: 6px; display: block; }
+        .helper-text { font-size: 11px; color: var(--text-muted); margin-top: 6px; display: block; line-height: 1.4; }
 
         /* ================= KẾT QUẢ ================= */
         .result-box { background: var(--result-bg); padding: 16px; border-radius: 10px; margin-top: 20px; border: 1px solid rgba(22, 163, 74, 0.3); }
@@ -74,7 +74,7 @@
         .btn-primary { width: 100%; background: var(--accent-color); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; margin-top: 16px; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25); }
 
-        /* ================= MOBILE RESPONSIVE (PWA) ================= */
+        /* ================= MOBILE RESPONSIVE ================= */
         @media (max-width: 480px) {
             body { padding: 5px; }
             .calculator { padding: 16px; border-radius: 12px; }
@@ -85,7 +85,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="updateUI()">
 
 <div class="calculator">
     <div class="header">
@@ -99,25 +99,25 @@
     <div class="flex-row">
         <div class="form-group">
             <label>Chiều chuyển</label>
-            <select id="direction" oninput="calculateMain()">
+            <select id="direction" onchange="triggerCalculation()">
                 <option value="V2VND">Vàng → VND</option>
                 <option value="VND2V">VND → Vàng</option>
             </select>
         </div>
         <div class="form-group">
             <label>Tỷ giá (Vàng/1 VND)</label>
-            <input type="number" id="rate" value="0.89" step="0.01" oninput="calculateMain()">
+            <input type="number" id="rate" value="0.89" step="0.01" oninput="triggerCalculation()">
         </div>
     </div>
 
     <div class="flex-row">
         <div class="form-group">
             <label>Phí (%)</label>
-            <input type="number" id="fee" value="12" step="0.1" oninput="calculateMain()">
+            <input type="number" id="fee" value="12" step="0.1" oninput="triggerCalculation()">
         </div>
         <div class="form-group">
             <label>Kiểu tính phí</label>
-            <select id="feeType" oninput="calculateMain()">
+            <select id="feeType" onchange="triggerCalculation()">
                 <option value="sender">Cộng vào người gửi</option>
                 <option value="receiver">Trừ vào người nhận</option>
             </select>
@@ -127,20 +127,20 @@
     <div class="helper-box">
         <div class="flex-row">
             <div class="form-group" style="margin-bottom:0;">
-                <label>1. Muốn trả Tổng (Dùng hết)</label>
+                <label>1. Muốn trả Tổng <span id="lblTotalUnit" class="unit-badge">Vàng</span></label>
                 <input type="number" id="balance" placeholder="Nhập tổng bị trừ..." oninput="handleReverse('balance')">
                 <span class="helper-text">Tính ra số Gốc sao cho Tổng bị trừ = số này</span>
             </div>
             <div class="form-group" style="margin-bottom:0;">
-                <label>2. Muốn Thực nhận (Ngược)</label>
-                <input type="number" id="desiredAmount" placeholder="Nhập số thực nhận..." oninput="handleReverse('desired')">
-                <span class="helper-text">Tính ra số Gốc sao cho Thực nhận = số này</span>
+                <label>2. Muốn Thực nhận <span id="lblDesiredUnit" class="unit-badge">VND</span></label>
+                <input type="number" id="desiredAmount" placeholder="Nhập thực nhận đích..." oninput="handleReverse('desired')">
+                <span class="helper-text">Tính ra số Gốc sao cho Tiền đích cuối = số này</span>
             </div>
         </div>
     </div>
 
     <div class="form-group">
-        <label style="font-size: 15px; color: var(--text-main);">👉 Số tiền Gốc (Nhập trực tiếp)</label>
+        <label style="font-size: 15px; color: var(--text-main);">👉 Số tiền Gốc <span id="lblMainUnit" class="unit-badge">Vàng</span></label>
         <input type="number" id="amount" placeholder="Nhập số tiền..." oninput="handleMainInput()" style="border: 2px solid var(--accent-color);">
     </div>
 
@@ -150,7 +150,7 @@
         <div class="result-item"><span>Tổng bị trừ (Gửi):</span> <span id="outTotalDeducted">0</span></div>
         <div class="result-item"><span>Thực nhận (Nhận):</span> <span id="outActualReceived">0</span></div>
         <div class="result-item highlight">
-            <span>Đổi sang tiền đích:</span> <span id="outConverted">0</span>
+            <span>Quy đổi tiền đích:</span> <span id="outConverted">0</span>
         </div>
     </div>
 
@@ -167,48 +167,81 @@
 <script>
     const formatNum = (num) => Number(num).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
 
-    // Xử lý khi người dùng gõ vào ô "Số tiền gốc"
+    // Hàm cập nhật Badge đơn vị khi đổi chiều
+    function updateUI() {
+        let direction = document.getElementById('direction').value;
+        let srcUnit = direction === 'V2VND' ? 'Vàng' : 'VND';
+        let targetUnit = direction === 'V2VND' ? 'VND' : 'Vàng';
+
+        document.getElementById('lblTotalUnit').innerText = srcUnit;
+        document.getElementById('lblDesiredUnit').innerText = targetUnit;
+        document.getElementById('lblMainUnit').innerText = srcUnit;
+    }
+
+    // Tự động tính lại nương theo ô đang có dữ liệu
+    function triggerCalculation() {
+        updateUI();
+        if (document.getElementById('balance').value !== "") {
+            handleReverse('balance');
+        } else if (document.getElementById('desiredAmount').value !== "") {
+            handleReverse('desired');
+        } else {
+            calculateMain();
+        }
+    }
+
+    // Nhập trực tiếp ô Gốc
     function handleMainInput() {
-        // Xóa các ô tính ngược để không gây nhầm lẫn
         document.getElementById('balance').value = '';
         document.getElementById('desiredAmount').value = '';
         calculateMain();
     }
 
-    // Xử lý khi người dùng gõ vào ô tính ngược hoặc tính tổng
+    // Logic Tính Ngược 
     function handleReverse(type) {
         let feePercent = parseFloat(document.getElementById('fee').value) || 0;
         let feeDecimal = feePercent / 100;
         let feeType = document.getElementById('feeType').value;
+        let rate = parseFloat(document.getElementById('rate').value) || 0;
+        let direction = document.getElementById('direction').value;
         let amount = 0;
 
         if (type === 'balance') {
             document.getElementById('desiredAmount').value = '';
             let balance = parseFloat(document.getElementById('balance').value) || 0;
             if (balance > 0) {
-                // Tính ngược từ Tổng bị trừ (Muốn trả tối đa)
                 amount = (feeType === 'sender') ? balance / (1 + feeDecimal) : balance;
             }
         } else if (type === 'desired') {
             document.getElementById('balance').value = '';
             let desired = parseFloat(document.getElementById('desiredAmount').value) || 0;
-            if (desired > 0) {
-                // Tính ngược từ Thực nhận (Muốn người nhận đủ)
+            
+            if (desired > 0 && rate > 0) {
+                // [FIX QUAN TRỌNG] - Tính ngược từ Tiền đích ra Tiền nguồn dựa theo đúng chiều
+                let actualSource = 0;
+                if (direction === 'V2VND') {
+                    // Chiều Vàng->VND: Đích là VND. Từ VND tính ngược ra Vàng (Thực nhận gốc) = Nhân tỷ giá
+                    actualSource = desired * rate;
+                } else {
+                    // Chiều VND->Vàng: Đích là Vàng. Từ Vàng tính ngược ra VND (Thực nhận gốc) = Chia tỷ giá
+                    actualSource = desired / rate;
+                }
+
+                // Có Thực nhận gốc rồi thì tính Gốc dựa theo FeeType
                 if (feeType === 'sender') {
-                    amount = desired;
+                    amount = actualSource; 
                 } else {
                     if (feeDecimal >= 1) return alert("Phí không thể >= 100%");
-                    amount = desired / (1 - feeDecimal);
+                    amount = actualSource / (1 - feeDecimal); 
                 }
             }
         }
 
-        // Cập nhật ô Gốc và chạy tính toán
         document.getElementById('amount').value = amount > 0 ? amount.toFixed(2) : '';
         calculateMain();
     }
 
-    // Logic tính toán chính (Đã sửa chia/nhân tỷ giá chuẩn)
+    // Logic Tính Thuận (Chính)
     function calculateMain() {
         let amount = parseFloat(document.getElementById('amount').value) || 0;
         let feePercent = parseFloat(document.getElementById('fee').value) || 0;
@@ -234,20 +267,16 @@
                 formulaStr = `Thực nhận = ${formatNum(amount)} × (1 - ${feePercent}%) = ${formatNum(actualReceived)}`;
             }
 
-            // FIX: Công thức tính quy đổi tiền tệ
             let targetCurrency = direction === 'V2VND' ? 'VND' : 'Vàng';
             if (direction === 'V2VND') {
-                // Chiều Vàng -> VND: Lấy Vàng chia cho tỷ giá (Ví dụ: 625k / 0.89 = 702.247)
                 converted = (rate > 0) ? actualReceived / rate : 0;
                 formulaStr += `\nQuy đổi = ${formatNum(actualReceived)} ÷ ${rate} = ${formatNum(converted)} ${targetCurrency}`;
             } else {
-                // Chiều VND -> Vàng: Lấy VND nhân cho tỷ giá
                 converted = actualReceived * rate;
                 formulaStr += `\nQuy đổi = ${formatNum(actualReceived)} × ${rate} = ${formatNum(converted)} ${targetCurrency}`;
             }
         }
 
-        // Render UI
         document.getElementById('outOriginal').innerText = formatNum(amount);
         document.getElementById('outFee').innerText = formatNum(feeAmount);
         document.getElementById('outTotalDeducted').innerText = formatNum(totalDeducted);
@@ -256,12 +285,10 @@
         document.getElementById('formulaDisplay').innerText = formulaStr || "Gõ số để xem công thức...";
     }
 
-    // Nút Copy sang trọng
     function copyResult() {
         let total = document.getElementById('outTotalDeducted').innerText;
         let received = document.getElementById('outActualReceived').innerText;
         let converted = document.getElementById('outConverted').innerText;
-        
         let textToCopy = `Tổng bị trừ: ${total}\nThực nhận: ${received}\nGiá trị quy đổi: ${converted}`;
         
         navigator.clipboard.writeText(textToCopy).then(() => {
@@ -269,7 +296,6 @@
         });
     }
 
-    // Nút Dark Mode
     function toggleTheme() {
         const body = document.documentElement;
         const btn = document.getElementById('themeBtn');
