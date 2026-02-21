@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyển Đổi Vàng & VND - Manga Style</title>
+    <style>
+        /* ================= BIẾN CSS (HỖ TRỢ DARK/LIGHT MODE) ================= */
+        :root {
+            --bg-body: #f4f5f6;
+            --bg-card: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --accent-color: #ff6a00; /* Màu cam đặc trưng web truyện */
+            --accent-hover: #e65c00;
+            --border-color: #e0e0e0;
+            --input-bg: #f9f9f9;
+            --result-bg: #fff3eb;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --radius: 12px;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #121212;
+            --bg-card: #1e1e1e;
+            --text-main: #f0f0f0;
+            --text-muted: #aaaaaa;
+            --border-color: #333333;
+            --input-bg: #2a2a2a;
+            --result-bg: #2d2218;
+            --shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* ================= RESET & BỐ CỤC ================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; transition: background 0.3s; }
+        
+        .calculator { background: var(--bg-card); width: 100%; max-width: 480px; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+        
+        /* ================= HEADER & DARK MODE ================= */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px dashed var(--border-color); }
+        .header h2 { color: var(--accent-color); font-size: 22px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .theme-toggle { background: none; border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .theme-toggle:hover { border-color: var(--accent-color); color: var(--accent-color); }
+
+        /* ================= INPUT FIELDS ================= */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 14px; margin-bottom: 6px; font-weight: 600; color: var(--text-muted); }
+        
+        .input-group { display: flex; gap: 10px; }
+        input[type="number"], select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-main); font-size: 16px; outline: none; transition: border 0.2s; }
+        input[type="number"]:focus, select:focus { border-color: var(--accent-color); }
+        
+        /* Nút phụ trợ (Dùng hết, Tính ngược) */
+        .btn-small { background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; transition: 0.2s; }
+        .btn-small:hover { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+
+        .flex-row { display: flex; gap: 15px; }
+        .flex-row .form-group { flex: 1; }
+
+        /* ================= KẾT QUẢ HIỂN THỊ ================= */
+        .result-box { background: var(--result-bg); padding: 16px; border-radius: 8px; margin-top: 20px; border: 1px solid rgba(255, 106, 0, 0.2); }
+        .result-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 15px; }
+        .result-item:last-child { margin-bottom: 0; }
+        .result-item.highlight { font-weight: bold; font-size: 18px; color: var(--accent-color); padding-top: 10px; border-top: 1px dashed var(--border-color); }
+        
+        /* ================= CÔNG THỨC & NÚT COPY ================= */
+        .formula { font-family: monospace; font-size: 13px; color: var(--text-muted); text-align: center; margin-top: 12px; background: var(--input-bg); padding: 8px; border-radius: 6px; }
+        .action-btns { display: flex; gap: 10px; margin-top: 16px; }
+        .btn-primary { flex: 1; background: var(--accent-color); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
+        .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 8px rgba(255,106,0,0.3); }
+    </style>
+</head>
+<body>
+
+<div class="calculator">
+    <div class="header">
+        <h2>🪙 Chuyển Đổi</h2>
+        <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+
+    <div class="form-group">
+        <label>Số dư hiện có</label>
+        <div class="input-group">
+            <input type="number" id="balance" placeholder="Nhập số dư của bạn..." oninput="calculate()">
+            <button class="btn-small" onclick="useMaxBalance()">Dùng hết</button>
+        </div>
+    </div>
+
+    <div class="flex-row">
+        <div class="form-group">
+            <label>Chiều chuyển</label>
+            <select id="direction" onchange="calculate()">
+                <option value="V2VND">Vàng → VND</option>
+                <option value="VND2V">VND → Vàng</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tỷ lệ quy đổi (Tỷ giá)</label>
+            <input type="number" id="rate" value="0.89" step="0.01" oninput="calculate()">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Số tiền nhập vào</label>
+        <div class="input-group">
+            <input type="number" id="amount" placeholder="Nhập số tiền..." oninput="calculate()">
+            <button class="btn-small" onclick="reverseCalculate()">Tính ngược</button>
+        </div>
+    </div>
+
+    <div class="flex-row">
+        <div class="form-group">
+            <label>Phí (%)</label>
+            <input type="number" id="fee" value="12" step="0.1" oninput="calculate()">
+        </div>
+        <div class="form-group">
+            <label>Kiểu tính phí</label>
+            <select id="feeType" onchange="calculate()">
+                <option value="sender">Cộng vào người gửi</option>
+                <option value="receiver">Trừ vào người nhận</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="result-box">
+        <div class="result-item">
+            <span>Số tiền gốc:</span>
+            <span id="outOriginal">0</span>
+        </div>
+        <div class="result-item">
+            <span>Số phí phải chịu:</span>
+            <span id="outFee">0</span>
+        </div>
+        <div class="result-item">
+            <span>Tổng bị trừ (Người gửi):</span>
+            <span id="outTotalDeducted">0</span>
+        </div>
+        <div class="result-item">
+            <span>Thực nhận (Người nhận):</span>
+            <span id="outActualReceived">0</span>
+        </div>
+        <div class="result-item highlight">
+            <span>Quy đổi sang tiền đích:</span>
+            <span id="outConverted">0</span>
+        </div>
+    </div>
+
+    <div class="formula" id="formulaDisplay">
+        Công thức sẽ hiển thị tại đây...
+    </div>
+
+    <div class="action-btns">
+        <button class="btn-primary" onclick="copyResult()">📋 Copy Kết Quả</button>
+    </div>
+</div>
+
+<script>
+    // Hàm Format số cho đẹp
+    const formatNum = (num) => Number(num).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+
+    function calculate() {
+        let amount = parseFloat(document.getElementById('amount').value) || 0;
+        let feePercent = parseFloat(document.getElementById('fee').value) || 0;
+        let rate = parseFloat(document.getElementById('rate').value) || 0;
+        let feeType = document.getElementById('feeType').value;
+        let direction = document.getElementById('direction').value;
+
+        let feeAmount = 0;
+        let totalDeducted = 0;
+        let actualReceived = 0;
+        let converted = 0;
+        let formulaStr = "";
+
+        if (amount > 0) {
+            let feeDecimal = feePercent / 100;
+
+            if (feeType === 'sender') {
+                // TH1: Phí cộng thêm vào người gửi
+                totalDeducted = amount * (1 + feeDecimal);
+                actualReceived = amount;
+                feeAmount = totalDeducted - amount;
+                formulaStr = `Tổng bị trừ = ${formatNum(amount)} × (1 + ${feePercent}%) = ${formatNum(totalDeducted)}`;
+            } else {
+                // TH2: Phí trừ vào người nhận
+                totalDeducted = amount;
+                actualReceived = amount * (1 - feeDecimal);
+                feeAmount = amount - actualReceived;
+                formulaStr = `Thực nhận = ${formatNum(amount)} × (1 - ${feePercent}%) = ${formatNum(actualReceived)}`;
+            }
+
+            // Tính quy đổi dựa trên thực nhận
+            converted = actualReceived * rate;
+            let sourceCurrency = direction === 'V2VND' ? 'Vàng' : 'VND';
+            let targetCurrency = direction === 'V2VND' ? 'VND' : 'Vàng';
+            formulaStr += ` | Quy đổi = ${formatNum(actualReceived)} × ${rate} = ${formatNum(converted)} ${targetCurrency}`;
+        }
+
+        // Cập nhật UI
+        document.getElementById('outOriginal').innerText = formatNum(amount);
+        document.getElementById('outFee').innerText = formatNum(feeAmount);
+        document.getElementById('outTotalDeducted').innerText = formatNum(totalDeducted);
+        document.getElementById('outActualReceived').innerText = formatNum(actualReceived);
+        document.getElementById('outConverted').innerText = formatNum(converted);
+        document.getElementById('formulaDisplay').innerText = formulaStr || "Đang chờ nhập số liệu...";
+    }
+
+    // Tính năng: Dùng hết số dư
+    function useMaxBalance() {
+        let balance = parseFloat(document.getElementById('balance').value) || 0;
+        let feePercent = parseFloat(document.getElementById('fee').value) || 0;
+        let feeType = document.getElementById('feeType').value;
+
+        if (balance <= 0) return alert("Vui lòng nhập số dư hợp lệ!");
+
+        let feeDecimal = feePercent / 100;
+        let maxInput = 0;
+
+        if (feeType === 'sender') {
+            // Nếu phí cộng vào người gửi: Số dư = Nhập * (1 + fee) => Nhập = Số dư / (1 + fee)
+            maxInput = balance / (1 + feeDecimal);
+        } else {
+            // Nếu phí trừ vào người nhận: Người gửi chỉ bị trừ đúng số nhập => Nhập = Số dư
+            maxInput = balance;
+        }
+
+        document.getElementById('amount').value = maxInput.toFixed(2);
+        calculate(); // Cập nhật lại UI
+    }
+
+    // Tính năng: Tính ngược (Muốn người nhận nhận đủ X)
+    function reverseCalculate() {
+        let desiredAmount = prompt("Nhập số tiền bạn muốn NGƯỜI NHẬN thực nhận:");
+        if (!desiredAmount || isNaN(desiredAmount)) return;
+
+        desiredAmount = parseFloat(desiredAmount);
+        let feePercent = parseFloat(document.getElementById('fee').value) || 0;
+        let feeType = document.getElementById('feeType').value;
+        let feeDecimal = feePercent / 100;
+        let requiredInput = 0;
+
+        if (feeType === 'sender') {
+            // Người nhận nhận đủ số nhập vào
+            requiredInput = desiredAmount;
+        } else {
+            // Người nhận = Nhập * (1 - fee) => Nhập = Người nhận / (1 - fee)
+            if (feeDecimal >= 1) return alert("Phí không thể >= 100% trong trường hợp này!");
+            requiredInput = desiredAmount / (1 - feeDecimal);
+        }
+
+        document.getElementById('amount').value = requiredInput.toFixed(2);
+        calculate();
+    }
+
+    // Tính năng Copy
+    function copyResult() {
+        let total = document.getElementById('outTotalDeducted').innerText;
+        let received = document.getElementById('outActualReceived').innerText;
+        let converted = document.getElementById('outConverted').innerText;
+        
+        let textToCopy = `Tổng bị trừ: ${total}\nThực nhận: ${received}\nGiá trị quy đổi: ${converted}`;
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert("Đã copy kết quả!");
+        });
+    }
+
+    // Tính năng Dark Mode
+    function toggleTheme() {
+        const body = document.documentElement;
+        const btn = document.getElementById('themeBtn');
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            btn.innerText = '🌙 Dark Mode';
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            btn.innerText = '☀️ Light Mode';
+        }
+    }
+</script>
+
+</body>
+</html>
